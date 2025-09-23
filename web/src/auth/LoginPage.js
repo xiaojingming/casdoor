@@ -69,6 +69,12 @@ class LoginPage extends React.Component {
       userCodeStatus: "",
       // bind type phone or github
       bindType: "",
+      // 邀请人推荐相关状态
+      showInvitationRecommendation: props.showInvitationRecommendation ?? false,
+      invitationChecked: false,
+      invitationCode: "",
+      // 判断来源是否为web
+      isFromWeb: false,
     };
 
     if (this.state.type === "cas" && props.match?.params.casApplicationName !== undefined) {
@@ -79,6 +85,7 @@ class LoginPage extends React.Component {
     localStorage.setItem("signinUrl", window.location.pathname + window.location.search);
 
     this.form = React.createRef();
+    this.invitationForm = React.createRef();
   }
 
   componentDidMount() {
@@ -93,8 +100,16 @@ class LoginPage extends React.Component {
     }
     const url = new URL(window.location.href);
     const params = new URLSearchParams(url.search);
+    const stateParam = params.get("state");
+    const redirectUri = params.get("redirect_uri");
+    // 判断redirect_uri是否包含v1/manager
+    const isFromWeb = redirectUri ? /v1\/manager/.test(redirectUri) : false;
     this.setState({
       bindType: params.get("bindType") ?? "",
+      showInvitationRecommendation: this.state.showInvitationRecommendation && !!stateParam,
+      invitationCode: isFromWeb ? stateParam || "" : "",
+      invitationChecked: this.state.showInvitationRecommendation && !!stateParam && isFromWeb,
+      isFromWeb: isFromWeb,
     });
   }
 
@@ -458,6 +473,62 @@ class LoginPage extends React.Component {
   login(values) {
     // here we are supposed to determine whether Casdoor is working as an OAuth server or CAS server
     values["language"] = this.state.userLang ?? "";
+    // 邀请码校验逻辑
+    if (this.state.showInvitationRecommendation && this.state.invitationChecked) {
+      // 先更新 Form 表单中的邀请码值
+      this.invitationForm.current.setFieldsValue({
+        invitationCode: this.state.invitationCode,
+      });
+      const self = this;
+      // 使用 Form 的验证方法
+      this.invitationForm.current.validateFields(["invitationCode"])
+        .then(() => {
+          // 验证通过，添加邀请码信息并继续登录
+          // values["invitationCode"] = this.state.invitationCode;
+          // 将邀请码赋值给url中的state参数
+          const url = new URL(window.location.href);
+          const params = new URLSearchParams(url.search);
+          if (self.state.isFromWeb) {
+            // 如果是来自web，保持当前逻辑
+            params.set("state", self.state.invitationCode);
+          } else {
+            // 如果不是来自web，在原state基础上拼接邀请码信息
+            const originalState = params.get("state") || "";
+            params.set("state", `${originalState}__inviter_code=${self.state.invitationCode}`);
+          }
+          url.search = params.toString();
+          window.history.replaceState({}, "", url.toString());
+          this.continueLogin(values);
+        })
+        .catch((errorInfo) => {
+          // 验证失败，显示错误信息并聚焦到邀请码输入框
+          this.setState({loginLoading: false});
+          if (errorInfo.errorFields.length > 0) {
+            const errorMessage = errorInfo.errorFields[0].errors[0];
+            Setting.showMessage("error", errorMessage);
+            // 聚焦到邀请码输入框
+            const invitationCodeInput = document.getElementById("invitationCode");
+            if (invitationCodeInput) {
+              invitationCodeInput.focus();
+            }
+          }
+        });
+      return;
+    }
+    // 当没有填写邀请码时的处理
+    if (this.state.isFromWeb) {
+      // 如果是来自web，清空url上的state
+      const url = new URL(window.location.href);
+      const params = new URLSearchParams(url.search);
+      params.delete("state");
+      url.search = params.toString();
+      window.history.replaceState({}, "", url.toString());
+    }
+    // 如果不是来自web，保持原本的state，不做任何处理
+    this.continueLogin(values);
+  }
+
+  continueLogin(values) {
     if (this.state.type === "cas") {
       // CAS
       const casParams = Util.getCasParameters();
@@ -491,6 +562,9 @@ class LoginPage extends React.Component {
     } else {
       // OAuth
       const oAuthParams = Util.getOAuthGetParameters();
+      if (this.state.showInvitationRecommendation && this.state.invitationChecked) {
+        oAuthParams.state = this.state.invitationCode;
+      }
       this.populateOauthValues(values);
       AuthBackend.login(values, oAuthParams)
         .then((res) => {
@@ -708,7 +782,7 @@ class LoginPage extends React.Component {
             ]}
           >
             <Space.Compact>
-              <Input style={{width: "20%"}} defaultValue="+86" readOnly />
+              <Input style={{width: "25%"}} defaultValue="+86" readOnly />
               <Input
                 id="input"
                 className="login-username-input"
@@ -838,7 +912,7 @@ class LoginPage extends React.Component {
                       }
                     }}>
                       {
-                        ProviderButton.renderProviderLogo(providerItem.provider, application, null, null, signinItem.rule, this.props.location, this.state.bindType)
+                        ProviderButton.renderProviderLogo(providerItem.provider, application, null, null, signinItem.rule, this.props.location, this.state.bindType, this.state.isFromWeb, this.state.invitationCode)
                       }
                     </span>
                   </>
@@ -1411,6 +1485,70 @@ class LoginPage extends React.Component {
               <div>
                 {
                   this.renderLoginPanel(application)
+                }
+                {
+                  // 邀请人推荐
+                  this.state.showInvitationRecommendation && (
+                    <div style={{
+                      textAlign: "left",
+                      marginTop: "24px",
+                      maxWidth: "350px",
+                    }}>
+                      <Form name="" ref={this.invitationForm}>
+                        <Form.Item>
+                          <Checkbox
+                            checked={this.state.invitationChecked}
+                            onChange={(e) => this.setState({invitationChecked: e.target.checked})}
+                          >
+                            {i18next.t("login:Invitation recommendation")}
+                          </Checkbox>
+                        </Form.Item>
+                        {this.state.invitationChecked && (
+                          <Form.Item
+                            name="invitationCode"
+                            rules={[
+                              {
+                                required: this.state.invitationChecked,
+                                message: i18next.t("login:Please fill in the invitation code"),
+                              },
+                              {
+                                pattern: /^[A-Z0-9]{4}$/,
+                                message: i18next.t("login:Please enter the correct invitation code"),
+                              },
+                            ]}
+                          >
+                            <Space.Compact>
+                              <Input
+                                style={{width: "25%"}}
+                                defaultValue={i18next.t("login:Invitation code")}
+                                readOnly
+                                className="login-username-input"
+                                size="large"
+                              />
+                              <Input
+                                id="invitationCode"
+                                className="login-username-input"
+                                placeholder={i18next.t("login:Please enter invitation code")}
+                                size="large"
+                                value={this.state.invitationCode}
+                                maxLength={4}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  this.setState({
+                                    invitationCode: value,
+                                  });
+                                  // 同时更新 Form 表单中的值
+                                  this.invitationForm.current.setFieldsValue({
+                                    invitationCode: value,
+                                  });
+                                }}
+                              />
+                            </Space.Compact>
+                          </Form.Item>
+                        )}
+                      </Form>
+                    </div>
+                  )
                 }
                 {
                   this.state.bindType && (<div style={{

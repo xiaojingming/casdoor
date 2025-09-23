@@ -574,7 +574,12 @@
     "Log in to Zhuge Shenma": "Log in to Costrict",
     "bind with type": "Bind with {type}",
     "bind with Phone": "Bind with phone number",
-    "bind tips": "If this account has previously registered with Costrict, it will be merged after binding. Records from the original account will no longer be retained."
+    "bind tips": "If this account has previously registered with Costrict, it will be merged after binding. Records from the original account will no longer be retained.",
+    "Invitation recommendation": "Invitation recommendation",
+    "Please fill in the invitation code": "Please fill in the invitation code",
+    "Please enter the correct invitation code": "Please enter the correct invitation code",
+    "Invitation code": "Invitation code",
+    "Please enter invitation code": "Please enter invitation code"
   },
   "mfa": {
     "Each time you sign in to your Account, you'll need your password and a authentication code": "Each time you sign in to your Account, you'll need your password and a authentication code",

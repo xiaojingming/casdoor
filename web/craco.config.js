@@ -1,43 +1,46 @@
 const CracoLessPlugin = require("craco-less");
 const path = require("path");
 
+// const base_url = "https://costrict.sangfor.com:30443"
+const base_url = "http://localhost:8007"
+
 module.exports = {
   devServer: {
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        target: base_url,
         changeOrigin: true,
       },
       "/swagger": {
-        target: "http://localhost:8000",
+        target: base_url,
         changeOrigin: true,
       },
       "/files": {
-        target: "http://localhost:8000",
+        target: base_url,
         changeOrigin: true,
       },
       "/.well-known/openid-configuration": {
-        target: "http://localhost:8000",
+        target: base_url,
         changeOrigin: true,
       },
       "/cas/serviceValidate": {
-        target: "http://localhost:8000",
+        target: base_url,
         changeOrigin: true,
       },
       "/cas/proxyValidate": {
-        target: "http://localhost:8000",
+        target: base_url,
         changeOrigin: true,
       },
       "/cas/proxy": {
-        target: "http://localhost:8000",
+        target: base_url,
         changeOrigin: true,
       },
       "/cas/validate": {
-        target: "http://localhost:8000",
+        target: base_url,
         changeOrigin: true,
       },
       "/scim": {
-        target: "http://localhost:8000",
+        target: base_url,
         changeOrigin: true,
       }
     },

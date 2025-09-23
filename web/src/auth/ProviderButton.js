@@ -110,6 +110,36 @@ function getAuthUrl(application, provider) {
   return Provider.getAuthUrl(application, provider, "signup");
 }
 
+function handleInviterCodeState(inviterCode, isFromWeb) {
+  // 获取当前URL参数
+  const url = new URL(window.location.href);
+  const params = new URLSearchParams(url.search);
+  let customState = null;
+  if (inviterCode) {
+    if (isFromWeb) {
+      // 如果inviterCode存在，当isFromWeb为true时，替换url中的state参数为inviterCode
+      customState = inviterCode;
+    } else {
+      // 如果inviterCode存在，当isFromWeb为false时，在原state的基础上进行拼接，增加`${原state}__inviter_code=${inviterCode}`
+      const originalState = params.get("state") || "";
+      customState = `${originalState}__inviter_code=${inviterCode}`;
+    }
+  } else {
+    if (isFromWeb) {
+      // 如果inviterCode不存在，当isFromWeb为true时，清空url中的state参数
+      customState = "";
+    }
+    // 如果inviterCode不存在，当isFromWeb为false时，不处理，保持原本的state参数
+  }
+  // 如果有自定义state，先设置到URL参数中
+  if (customState !== null) {
+    params.set("state", customState);
+    // 更新当前页面的URL参数（不刷新页面）
+    const newUrl = `${url.pathname}?${params.toString()}${url.hash}`;
+    window.history.replaceState({}, "", newUrl);
+  }
+}
+
 function goToSamlUrl(provider, location) {
   const params = new URLSearchParams(location.search);
   const clientId = params.get("client_id") ?? "";
@@ -153,7 +183,7 @@ function getHasIdtrustProviderItems(provider) {
     && provider?.type === "Custom");
 }
 
-export function renderProviderLogo(provider, application, width, margin, size, location, bindType) {
+export function renderProviderLogo(provider, application, width, margin, size, location, bindType, isFromWeb = false, inviterCode = "") {
   if (size === "small") {
     if (provider.category === "OAuth") {
       if (provider.type === "WeChat" && provider.clientId2 !== "" && provider.clientSecret2 !== "" && provider.disableSsl === true && !navigator.userAgent.includes("MicroMessenger")) {
@@ -177,7 +207,13 @@ export function renderProviderLogo(provider, application, width, margin, size, l
             borderRadius: "2px",
             cursor: "pointer",
           }}
-          onClick={() => window.location.href = getAuthUrl(application, provider, "signup")}
+          onClick={() => {
+            // 处理inviterCode和state参数逻辑
+            handleInviterCodeState(inviterCode, isFromWeb);
+            // 最后才执行原来的跳转逻辑
+            const authUrl = getAuthUrl(application, provider, "signup");
+            window.location.href = authUrl;
+          }}
           >
             <a key={provider.displayName} href={getAuthUrl(application, provider, "signup")}>
               <img width={width} height={width} src={hasIdtrust ? IdtrustImg : getProviderLogoURL(provider)} alt={provider.displayName} className="provider-img" style={{margin: margin}} />
