@@ -122,7 +122,13 @@ function handleInviterCodeState(inviterCode, isFromWeb) {
     } else {
       // 如果inviterCode存在，当isFromWeb为false时，在原state的基础上进行拼接，增加`${原state}__inviter_code=${inviterCode}`
       const originalState = params.get("state") || "";
-      customState = `${originalState}__inviter_code=${inviterCode}`;
+      // 检查原state中是否已经包含__inviter_code=，如果包含则先移除旧的，避免重复添加
+      const inviterCodePattern = /__inviter_code=[^&]*/;
+      let cleanState = originalState;
+      if (inviterCodePattern.test(originalState)) {
+        cleanState = originalState.replace(inviterCodePattern, "");
+      }
+      customState = `${cleanState}__inviter_code=${inviterCode}`;
     }
   } else {
     if (isFromWeb) {

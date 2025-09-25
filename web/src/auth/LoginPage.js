@@ -106,7 +106,7 @@ class LoginPage extends React.Component {
     const isFromWeb = redirectUri ? /v1\/manager/.test(redirectUri) : false;
     this.setState({
       bindType: params.get("bindType") ?? "",
-      showInvitationRecommendation: this.state.showInvitationRecommendation && !!stateParam,
+      // showInvitationRecommendation: this.state.showInvitationRecommendation && !!stateParam,
       invitationCode: isFromWeb ? stateParam || "" : "",
       invitationChecked: this.state.showInvitationRecommendation && !!stateParam && isFromWeb,
       isFromWeb: isFromWeb,
