@@ -1488,7 +1488,7 @@ class LoginPage extends React.Component {
                 }
                 {
                   // 邀请人推荐
-                  this.state.showInvitationRecommendation && (
+                  this.state.showInvitationRecommendation && !this.state.bindType && (
                     <div style={{
                       textAlign: "left",
                       marginTop: "24px",
