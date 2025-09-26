@@ -110,12 +110,12 @@ function getAuthUrl(application, provider) {
   return Provider.getAuthUrl(application, provider, "signup");
 }
 
-function handleInviterCodeState(inviterCode, isFromWeb) {
+function handleInviterCodeState(inviterCode, isFromWeb, invitationChecked) {
   // 获取当前URL参数
   const url = new URL(window.location.href);
   const params = new URLSearchParams(url.search);
   let customState = null;
-  if (inviterCode) {
+  if (invitationChecked) {
     if (isFromWeb) {
       // 如果inviterCode存在，当isFromWeb为true时，替换url中的state参数为inviterCode
       customState = inviterCode;
@@ -134,6 +134,7 @@ function handleInviterCodeState(inviterCode, isFromWeb) {
     if (isFromWeb) {
       // 如果inviterCode不存在，当isFromWeb为true时，清空url中的state参数
       customState = "";
+      params.delete("state");
     }
     // 如果inviterCode不存在，当isFromWeb为false时，不处理，保持原本的state参数
   }
@@ -189,7 +190,7 @@ function getHasIdtrustProviderItems(provider) {
     && provider?.type === "Custom");
 }
 
-export function renderProviderLogo(provider, application, width, margin, size, location, bindType, isFromWeb = false, inviterCode = "") {
+export function renderProviderLogo(provider, application, width, margin, size, location, bindType, isFromWeb = false, inviterCode = "", invitationChecked = false, providerBtnCheckInvitationCode) {
   if (size === "small") {
     if (provider.category === "OAuth") {
       if (provider.type === "WeChat" && provider.clientId2 !== "" && provider.clientSecret2 !== "" && provider.disableSsl === true && !navigator.userAgent.includes("MicroMessenger")) {
@@ -213,15 +214,22 @@ export function renderProviderLogo(provider, application, width, margin, size, l
             borderRadius: "2px",
             cursor: "pointer",
           }}
-          onClick={() => {
+          onClick={async() => {
             // 绑定不进行处理
             if (bindType) {
               const authUrl = getAuthUrl(application, provider, "signup");
               window.location.href = authUrl;
               return;
             }
+            // 勾选邀请人推荐先校验
+            if (invitationChecked) {
+              const res = await providerBtnCheckInvitationCode?.();
+              if (!res) {
+                return;
+              }
+            }
             // 处理inviterCode和state参数逻辑
-            handleInviterCodeState(inviterCode, isFromWeb);
+            handleInviterCodeState(inviterCode, isFromWeb, invitationChecked);
             // 最后才执行原来的跳转逻辑
             const authUrl = getAuthUrl(application, provider, "signup");
             window.location.href = authUrl;

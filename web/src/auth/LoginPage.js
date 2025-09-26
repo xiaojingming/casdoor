@@ -178,6 +178,89 @@ class LoginPage extends React.Component {
       });
   }
 
+  providerBtnCheckInvitationCode() {
+    // 先更新 Form 表单中的邀请码值
+    return new Promise((resolve) => {
+      this.invitationForm.current.setFieldsValue({
+        invitationCode: this.state.invitationCode,
+      });
+      // 使用 Form 的验证方法
+      this.invitationForm.current.validateFields(["invitationCode"])
+        .then(() => {
+          resolve(true);
+        })
+        .catch((errorInfo) => {
+          // 验证失败，显示错误信息并聚焦到邀请码输入框
+          if (errorInfo.errorFields.length > 0) {
+            const errorMessage = errorInfo.errorFields[0].errors[0];
+            Setting.showMessage("error", errorMessage);
+            // 聚焦到邀请码输入框
+            const invitationCodeInput = document.getElementById("invitationCode");
+            if (invitationCodeInput) {
+              invitationCodeInput.focus();
+            }
+          }
+          resolve(false);
+        });
+    });
+  }
+
+  validateInvitationCode(values) {
+    // 邀请码校验逻辑
+    if (this.state.showInvitationRecommendation && this.state.invitationChecked) {
+      // 先更新 Form 表单中的邀请码值
+      this.invitationForm.current.setFieldsValue({
+        invitationCode: this.state.invitationCode,
+      });
+      const self = this;
+      // 使用 Form 的验证方法
+      this.invitationForm.current.validateFields(["invitationCode"])
+        .then(() => {
+          // 验证通过，添加邀请码信息并继续登录
+          // values["invitationCode"] = this.state.invitationCode;
+          // 将邀请码赋值给url中的state参数
+          const url = new URL(window.location.href);
+          const params = new URLSearchParams(url.search);
+          if (self.state.isFromWeb) {
+            // 如果是来自web，保持当前逻辑
+            params.set("state", self.state.invitationCode);
+          } else {
+            // 如果不是来自web，在原state基础上拼接邀请码信息
+            const originalState = params.get("state") || "";
+            params.set("state", `${originalState}__inviter_code=${self.state.invitationCode}`);
+          }
+          url.search = params.toString();
+          window.history.replaceState({}, "", url.toString());
+          this.continueLogin(values);
+        })
+        .catch((errorInfo) => {
+          // 验证失败，显示错误信息并聚焦到邀请码输入框
+          this.setState({loginLoading: false});
+          if (errorInfo.errorFields.length > 0) {
+            const errorMessage = errorInfo.errorFields[0].errors[0];
+            Setting.showMessage("error", errorMessage);
+            // 聚焦到邀请码输入框
+            const invitationCodeInput = document.getElementById("invitationCode");
+            if (invitationCodeInput) {
+              invitationCodeInput.focus();
+            }
+          }
+        });
+      return true; // 需要邀请码验证，中断登录流程
+    }
+    // 当没有填写邀请码时的处理
+    if (this.state.isFromWeb) {
+      // 如果是来自web，清空url上的state
+      const url = new URL(window.location.href);
+      const params = new URLSearchParams(url.search);
+      params.delete("state");
+      url.search = params.toString();
+      window.history.replaceState({}, "", url.toString());
+    }
+    // 如果不是来自web，保持原本的state，不做任何处理
+    return false; // 不需要邀请码验证，继续登录流程
+  }
+
   getApplicationLogin() {
     let loginParams;
     if (this.state.type === "cas") {
@@ -478,58 +561,9 @@ class LoginPage extends React.Component {
       return this.continueLogin(values);
     }
 
-    // 邀请码校验逻辑
-    if (this.state.showInvitationRecommendation && this.state.invitationChecked) {
-      // 先更新 Form 表单中的邀请码值
-      this.invitationForm.current.setFieldsValue({
-        invitationCode: this.state.invitationCode,
-      });
-      const self = this;
-      // 使用 Form 的验证方法
-      this.invitationForm.current.validateFields(["invitationCode"])
-        .then(() => {
-          // 验证通过，添加邀请码信息并继续登录
-          // values["invitationCode"] = this.state.invitationCode;
-          // 将邀请码赋值给url中的state参数
-          const url = new URL(window.location.href);
-          const params = new URLSearchParams(url.search);
-          if (self.state.isFromWeb) {
-            // 如果是来自web，保持当前逻辑
-            params.set("state", self.state.invitationCode);
-          } else {
-            // 如果不是来自web，在原state基础上拼接邀请码信息
-            const originalState = params.get("state") || "";
-            params.set("state", `${originalState}__inviter_code=${self.state.invitationCode}`);
-          }
-          url.search = params.toString();
-          window.history.replaceState({}, "", url.toString());
-          this.continueLogin(values);
-        })
-        .catch((errorInfo) => {
-          // 验证失败，显示错误信息并聚焦到邀请码输入框
-          this.setState({loginLoading: false});
-          if (errorInfo.errorFields.length > 0) {
-            const errorMessage = errorInfo.errorFields[0].errors[0];
-            Setting.showMessage("error", errorMessage);
-            // 聚焦到邀请码输入框
-            const invitationCodeInput = document.getElementById("invitationCode");
-            if (invitationCodeInput) {
-              invitationCodeInput.focus();
-            }
-          }
-        });
+    if (this.validateInvitationCode(values)) {
       return;
     }
-    // 当没有填写邀请码时的处理
-    if (this.state.isFromWeb) {
-      // 如果是来自web，清空url上的state
-      const url = new URL(window.location.href);
-      const params = new URLSearchParams(url.search);
-      params.delete("state");
-      url.search = params.toString();
-      window.history.replaceState({}, "", url.toString());
-    }
-    // 如果不是来自web，保持原本的state，不做任何处理
     this.continueLogin(values);
   }
 
@@ -917,7 +951,7 @@ class LoginPage extends React.Component {
                       }
                     }}>
                       {
-                        ProviderButton.renderProviderLogo(providerItem.provider, application, null, null, signinItem.rule, this.props.location, this.state.bindType, this.state.isFromWeb, this.state.invitationCode)
+                        ProviderButton.renderProviderLogo(providerItem.provider, application, null, null, signinItem.rule, this.props.location, this.state.bindType, this.state.isFromWeb, this.state.invitationCode, this.state.invitationChecked, () => this.providerBtnCheckInvitationCode())
                       }
                     </span>
                   </>
