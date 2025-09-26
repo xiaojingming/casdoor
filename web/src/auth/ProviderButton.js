@@ -214,6 +214,12 @@ export function renderProviderLogo(provider, application, width, margin, size, l
             cursor: "pointer",
           }}
           onClick={() => {
+            // 绑定不进行处理
+            if (bindType) {
+              const authUrl = getAuthUrl(application, provider, "signup");
+              window.location.href = authUrl;
+              return;
+            }
             // 处理inviterCode和state参数逻辑
             handleInviterCodeState(inviterCode, isFromWeb);
             // 最后才执行原来的跳转逻辑

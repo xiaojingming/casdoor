@@ -473,6 +473,11 @@ class LoginPage extends React.Component {
   login(values) {
     // here we are supposed to determine whether Casdoor is working as an OAuth server or CAS server
     values["language"] = this.state.userLang ?? "";
+    // 绑定逻辑直接跳过
+    if (this.state.bindType) {
+      return this.continueLogin(values);
+    }
+
     // 邀请码校验逻辑
     if (this.state.showInvitationRecommendation && this.state.invitationChecked) {
       // 先更新 Form 表单中的邀请码值
