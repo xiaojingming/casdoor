@@ -565,16 +565,16 @@
     "sign up now": "sign up now",
     "username, Email or phone": "username, Email or phone",
     "Other login methods": "Other login methods",
-    "Welcome to Shenma": "Welcome to Costrict🎉🎉",
-    "Login by acceptance": "Login by acceptance",
+    "Welcome to Shenma": "Welcome to CoStrict🎉🎉",
+    "Login by acceptance": "Read and agree",
     "Terms of Service": "《Terms of Service》",
     "Privacy Policy": "《Privacy Policy》",
-    "Login success": "Login to Costrict was successful. Please return to your IDE client to get started.",
+    "Login success": "Login to CoStrict was successful. Please return to your IDE client to get started.",
     "Log in with type": "Log in with {type}",
-    "Log in to Zhuge Shenma": "Log in to Costrict",
+    "Log in to Zhuge Shenma": "Log in to CoStrict",
     "bind with type": "Bind with {type}",
     "bind with Phone": "Bind with phone number",
-    "bind tips": "If this account has previously registered with Costrict, it will be merged after binding. (include credit)",
+    "bind tips": "If this account has previously registered with CoStrict, it will be merged after binding. (include credit)",
     "Invitation recommendation": "Invitation recommendation",
     "Please fill in the invitation code": "Please fill in the invitation code",
     "Please enter the correct invitation code": "Please enter the correct invitation code",
@@ -1305,5 +1305,11 @@
     "Single org only": "Single org only",
     "Single org only - Tooltip": "Triggered only in the organization that the webhook belongs to",
     "Value": "Value"
+  },
+  "protocolModal": {
+    "title": "Agree to CoStrict's agreement",
+    "content": "By logging in, you acknowledge that you have read and agreed to the \"User Agreement\" and \"Privacy Agreement\".",
+    "okText": "Confirm",
+    "cancelText": "Cancel"
   }
 }

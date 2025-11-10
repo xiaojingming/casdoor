@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import React from "react";
+import {Modal} from "antd";
 import i18next from "i18next";
 import * as Provider from "./Provider";
 import {getProviderLogoURL} from "../Setting";
@@ -190,7 +191,7 @@ function getHasIdtrustProviderItems(provider) {
     && provider?.type === "Custom");
 }
 
-export function renderProviderLogo(provider, application, width, margin, size, location, bindType, isFromWeb = false, inviterCode = "", invitationChecked = false, providerBtnCheckInvitationCode) {
+export function renderProviderLogo(provider, application, width, margin, size, location, bindType, isFromWeb = false, inviterCode = "", invitationChecked = false, providerBtnCheckInvitationCode, onTermsChange, termsAccepted) {
   if (size === "small") {
     if (provider.category === "OAuth") {
       if (provider.type === "WeChat" && provider.clientId2 !== "" && provider.clientSecret2 !== "" && provider.disableSsl === true && !navigator.userAgent.includes("MicroMessenger")) {
@@ -215,24 +216,64 @@ export function renderProviderLogo(provider, application, width, margin, size, l
             cursor: "pointer",
           }}
           onClick={async() => {
-            // 绑定不进行处理
-            if (bindType) {
-              const authUrl = getAuthUrl(application, provider, "signup");
-              window.location.href = authUrl;
-              return;
-            }
-            // 勾选邀请人推荐先校验
-            if (invitationChecked) {
-              const res = await providerBtnCheckInvitationCode?.();
-              if (!res) {
+            // 检查 termsAccepted 状态，如果为 false 则显示提示信息
+            if (!termsAccepted) {
+              Modal.confirm({
+                title: i18next.t("protocolModal:title"),
+                content: i18next.t("protocolModal:content"),
+                okText: i18next.t("protocolModal:okText"),
+                cancelText: i18next.t("protocolModal:cancelText"),
+                icon: null,
+                centered: true,
+                onOk: async() => {
+                  // 点击确认后，触发勾选函数，修改勾选状态
+                  if (onTermsChange) {
+                    onTermsChange({target: {checked: true}});
+                  }
+                  // 绑定不进行处理
+                  if (bindType) {
+                    const authUrl = getAuthUrl(application, provider, "signup");
+                    window.location.href = authUrl;
+                    return;
+                  }
+                  // 勾选邀请人推荐先校验
+                  if (invitationChecked) {
+                    const res = await providerBtnCheckInvitationCode?.();
+                    if (!res) {
+                      return;
+                    }
+                  }
+                  // 处理inviterCode和state参数逻辑
+                  handleInviterCodeState(inviterCode, isFromWeb, invitationChecked);
+                  // 最后才执行原来的跳转逻辑
+                  const authUrl = getAuthUrl(application, provider, "signup");
+                  window.location.href = authUrl;
+                },
+                onCancel: () => {
+                  return;
+                },
+              });
+            } else {
+              // 如果已同意协议，直接执行原来的逻辑
+              // 绑定不进行处理
+              if (bindType) {
+                const authUrl = getAuthUrl(application, provider, "signup");
+                window.location.href = authUrl;
                 return;
               }
+              // 勾选邀请人推荐先校验
+              if (invitationChecked) {
+                const res = await providerBtnCheckInvitationCode?.();
+                if (!res) {
+                  return;
+                }
+              }
+              // 处理inviterCode和state参数逻辑
+              handleInviterCodeState(inviterCode, isFromWeb, invitationChecked);
+              // 最后才执行原来的跳转逻辑
+              const authUrl = getAuthUrl(application, provider, "signup");
+              window.location.href = authUrl;
             }
-            // 处理inviterCode和state参数逻辑
-            handleInviterCodeState(inviterCode, isFromWeb, invitationChecked);
-            // 最后才执行原来的跳转逻辑
-            const authUrl = getAuthUrl(application, provider, "signup");
-            window.location.href = authUrl;
           }}
           >
             <a key={provider.displayName} href={getAuthUrl(application, provider, "signup")}>

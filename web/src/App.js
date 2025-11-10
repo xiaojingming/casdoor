@@ -19,7 +19,7 @@ import * as Setting from "./Setting";
 import {setOrgIsTourVisible, setTourLogo} from "./TourConfig";
 import {StyleProvider, legacyLogicalPropertiesTransformer} from "@ant-design/cssinjs";
 import {GithubOutlined, InfoCircleFilled, ShareAltOutlined} from "@ant-design/icons";
-import {Alert, Button, ConfigProvider, Drawer, FloatButton, Layout, Result, Tooltip} from "antd";
+import {Alert, Button, Checkbox, ConfigProvider, Drawer, FloatButton, Layout, Result, Tooltip} from "antd";
 import {Route, Switch, withRouter} from "react-router-dom";
 import CustomGithubCorner from "./common/CustomGithubCorner";
 import * as Conf from "./Conf";
@@ -66,6 +66,7 @@ class App extends Component {
       requiredEnableMfa: false,
       isAiAssistantOpen: false,
       application: undefined,
+      termsAccepted: false,
     };
     Setting.initServerUrl();
     Auth.initAuthWithConfig({
@@ -274,6 +275,12 @@ class App extends Component {
     });
   }
 
+  onTermsChange = (e) => {
+    this.setState({
+      termsAccepted: e.target.checked,
+    });
+  };
+
   renderFooter(logo, footerHtml) {
     logo = logo ?? this.state.logo;
     footerHtml = footerHtml ?? this.state.application?.footerHtml;
@@ -281,6 +288,7 @@ class App extends Component {
     const privacyPolicy = language === "en" ? PrivacyPolicyEn : PrivacyPolicyZh;
     const termsOfService = language === "en" ? TermsOfServiceEn : TermsOfServiceZh;
     const isLoginSuccessPage = this.props.location.pathname === "/login/success";
+    const isOAuthAuthorizePage = this.props.location.pathname === "/login/oauth/authorize";
     const commonStyle = {
       fontWeight: 600, color: isLoginSuccessPage ? "#fff" : "",
     };
@@ -309,8 +317,13 @@ class App extends Component {
                 Conf.CustomFooter !== null ? Conf.CustomFooter : (
                   <React.Fragment>
                     {/* Powered by <a target="_blank" href="https://casdoor.org" rel="noreferrer"><img style={{paddingBottom: "3px"}} height={"20px"} alt={"Casdoor"} src={logo} /></a> */}
-                    <div className="terms-privacy" style={{display: "flex", justifyContent: "center", fontSize: "14px"}}>
-                      <div style={{opacity: "0.5"}}>{i18next.t("login:Login by acceptance")}</div>
+                    <div className="terms-privacy" style={{display: "flex", justifyContent: "center", fontSize: "14px", alignItems: "center"}}>
+                      {isOAuthAuthorizePage && (
+                        <React.Fragment>
+                          <Checkbox checked={this.state.termsAccepted} onChange={this.onTermsChange} style={{marginRight: "8px"}} />
+                          <div style={{opacity: "0.5"}}>{i18next.t("login:Login by acceptance")}</div>
+                        </React.Fragment>
+                      )}
                       <a
                         href={termsOfService}
                         className="terms-link"
@@ -449,6 +462,8 @@ class App extends Component {
                       onLoginSuccess={(redirectUrl) => {this.onLoginSuccess(redirectUrl);}}
                       onUpdateAccount={(account) => this.onUpdateAccount(account)}
                       updataThemeData={this.setTheme}
+                      termsAccepted={this.state.termsAccepted}
+                      onTermsChange={this.onTermsChange}
                     /> :
                     <Switch>
                       <Route exact path="/callback" render={(props) => <AuthCallback {...props} {...this.props} application={this.state.application} onLoginSuccess={(redirectUrl) => {this.onLoginSuccess(redirectUrl);}} />} />

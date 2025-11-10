@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React, {Suspense, lazy} from "react";
-import {Button, Checkbox, Col, Divider, Form, Input, Result, Space, Spin, Tabs, message} from "antd";
+import {Button, Checkbox, Col, Divider, Form, Input, Modal, Result, Space, Spin, Tabs, message} from "antd";
 import {ArrowLeftOutlined, LockOutlined} from "@ant-design/icons";
 import {withRouter} from "react-router-dom";
 import * as UserWebauthnBackend from "../backend/UserWebauthnBackend";
@@ -397,6 +397,10 @@ class LoginPage extends React.Component {
     }
   }
 
+  onTermsChange = (e) => {
+    this.props.onTermsChange(e);
+  };
+
   parseOffset(offset) {
     if (offset === 2 || offset === 4 || Setting.inIframe() || Setting.isMobile()) {
       return "0 auto";
@@ -554,8 +558,37 @@ class LoginPage extends React.Component {
   }
 
   login(values) {
+    // casdoor登录页
+    const isOAuthAuthorizePage = this.props.location.pathname === "/login/oauth/authorize";
     // here we are supposed to determine whether Casdoor is working as an OAuth server or CAS server
     values["language"] = this.state.userLang ?? "";
+    // 检查 termsAccepted 状态，如果为 false 则显示提示信息
+    if (!this.props.termsAccepted && isOAuthAuthorizePage) {
+      Modal.confirm({
+        title: i18next.t("protocolModal:title"),
+        content: i18next.t("protocolModal:content"),
+        okText: i18next.t("protocolModal:okText"),
+        cancelText: i18next.t("protocolModal:cancelText"),
+        icon: null,
+        centered: true,
+        onOk: () => {
+          // 点击确认后，触发勾选函数，修改勾选状态
+          this.onTermsChange({target: {checked: true}});
+          // 然后继续登录流程
+          this.proceedWithLogin(values);
+        },
+        onCancel: () => {
+          this.setState({loginLoading: false});
+          return;
+        },
+      });
+    } else {
+      // 如果已同意协议，直接继续登录流程
+      this.proceedWithLogin(values);
+    }
+  }
+
+  proceedWithLogin(values) {
     // 绑定逻辑直接跳过
     if (this.state.bindType) {
       return this.continueLogin(values);
@@ -951,7 +984,7 @@ class LoginPage extends React.Component {
                       }
                     }}>
                       {
-                        ProviderButton.renderProviderLogo(providerItem.provider, application, null, null, signinItem.rule, this.props.location, this.state.bindType, this.state.isFromWeb, this.state.invitationCode, this.state.invitationChecked, () => this.providerBtnCheckInvitationCode())
+                        ProviderButton.renderProviderLogo(providerItem.provider, application, null, null, signinItem.rule, this.props.location, this.state.bindType, this.state.isFromWeb, this.state.invitationCode, this.state.invitationChecked, () => this.providerBtnCheckInvitationCode(), (e) => this.onTermsChange(e), this.props.termsAccepted)
                       }
                     </span>
                   </>

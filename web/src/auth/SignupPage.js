@@ -716,7 +716,9 @@ class SignupPage extends React.Component {
               }
             }}>
               {
-                ProviderButton.renderProviderLogo(providerItem.provider, application, null, null, signupItem.rule, this.props.location)
+                ProviderButton.renderProviderLogo(providerItem.provider, application, null, null, signupItem.rule, this.props.location, null, false, "", false, null, (e) => {
+                  this.form.current?.setFieldValue("agreement", e.target.checked);
+                }, this.form.current?.getFieldValue("agreement"))
               }
             </span>
           );
