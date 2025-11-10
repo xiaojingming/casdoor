@@ -1308,7 +1308,7 @@
   },
   "protocolModal": {
     "title": "同意 CoStrict 的协议",
-    "content": "登录即代表你已阅读并同意《用户协议》和《隐私协议》",
+    "content": "登录即代表你已阅读并同意《CoStrict 用户协议》和《隐私政策》",
     "okText": "确认",
     "cancelText": "取消"
   }
