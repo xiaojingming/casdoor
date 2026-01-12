@@ -37,10 +37,6 @@ const {Footer, Content} = Layout;
 import {setTwoToneColor} from "@ant-design/icons";
 import * as ApplicationBackend from "./backend/ApplicationBackend";
 import * as Cookie from "cookie";
-import PrivacyPolicyEn from "./static/privacy-policy-en.pdf";
-import PrivacyPolicyZh from "./static/privacy-policy-zh.pdf";
-import TermsOfServiceEn from "./static/terms-of-service-en.pdf";
-import TermsOfServiceZh from "./static/terms-of-service-zh.pdf";
 
 setTwoToneColor("rgb(87,52,211)");
 
@@ -285,8 +281,9 @@ class App extends Component {
     logo = logo ?? this.state.logo;
     footerHtml = footerHtml ?? this.state.application?.footerHtml;
     const language = Setting.getLanguage();
-    const privacyPolicy = language === "en" ? PrivacyPolicyEn : PrivacyPolicyZh;
-    const termsOfService = language === "en" ? TermsOfServiceEn : TermsOfServiceZh;
+    const privacyPolicy = `https://docs.costrict.ai/${language === "en" ? "en/" : ""}policy/privacy-policy`;
+    const termsOfService = `https://docs.costrict.ai/${language === "en" ? "en/" : ""}policy/terms-of-service`;
+
     const isLoginSuccessPage = this.props.location.pathname === "/login/success";
     const isOAuthAuthorizePage = this.props.location.pathname === "/login/oauth/authorize";
     const commonStyle = {
