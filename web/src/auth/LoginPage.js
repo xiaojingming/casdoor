@@ -104,11 +104,13 @@ class LoginPage extends React.Component {
     const redirectUri = params.get("redirect_uri");
     // 判断redirect_uri是否包含v1/manager
     const isFromWeb = redirectUri ? /v1\/manager/.test(redirectUri) : false;
+    // 判断isShare是否为true
+    const isShare = params.get("isShare") === "true";
     this.setState({
       bindType: params.get("bindType") ?? "",
       // showInvitationRecommendation: this.state.showInvitationRecommendation && !!stateParam,
       invitationCode: isFromWeb ? stateParam || "" : "",
-      invitationChecked: this.state.showInvitationRecommendation && !!stateParam && isFromWeb,
+      invitationChecked: isShare ? false : (this.state.showInvitationRecommendation && !!stateParam && isFromWeb),
       isFromWeb: isFromWeb,
     });
   }

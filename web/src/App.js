@@ -314,7 +314,7 @@ class App extends Component {
                 Conf.CustomFooter !== null ? Conf.CustomFooter : (
                   <React.Fragment>
                     {/* Powered by <a target="_blank" href="https://casdoor.org" rel="noreferrer"><img style={{paddingBottom: "3px"}} height={"20px"} alt={"Casdoor"} src={logo} /></a> */}
-                    <div className="terms-privacy" style={{display: "flex", justifyContent: "center", fontSize: "14px", alignItems: "center"}}>
+                    <div className="terms-privacy" style={{display: "flex", justifyContent: "center", fontSize: "14px", alignItems: "center", flexWrap: "wrap", gap: "8px", padding: "0 10px"}}>
                       {isOAuthAuthorizePage && (
                         <React.Fragment>
                           <Checkbox checked={this.state.termsAccepted} onChange={this.onTermsChange} style={{marginRight: "8px"}} />
@@ -324,15 +324,16 @@ class App extends Component {
                       <a
                         href={termsOfService}
                         className="terms-link"
-                        style={commonStyle}
+                        style={{...commonStyle, marginLeft: "4px", marginRight: "4px"}}
                         target="open"
                       >
                         {i18next.t("login:Terms of Service")}
                       </a>
+                      <span style={{opacity: 0.3}}>|</span>
                       <a
                         href={privacyPolicy}
                         className="privacy-link"
-                        style={commonStyle}
+                        style={{...commonStyle, marginLeft: "4px"}}
                         target="open"
                       >
                         {i18next.t("login:Privacy Policy")}
